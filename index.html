@@ -2,169 +2,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MoonRadar | Meme Coin Tracker</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #090d18;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #263047;
-      padding-bottom: 18px;
-    }
-
-    h1 {
-      color: #a78bfa;
-      margin: 0;
-    }
-
-    .status {
-      color: #22c55e;
-      font-size: 12px;
-    }
-
-    .welcome {
-      margin: 30px 0;
-    }
-
-    .welcome p {
-      color: #9ca3af;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .card {
-      background: #151d30;
-      border: 1px solid #293650;
-      border-radius: 12px;
-      padding: 16px;
-    }
-
-    .card p {
-      color: #9ca3af;
-      font-size: 13px;
-    }
-
-    .card h2 {
-      margin-bottom: 0;
-    }
-
-    .section {
-      margin-top: 28px;
-    }
-
-    .section h2 {
-      color: #c4b5fd;
-    }
-
-    .feature {
-      background: #151d30;
-      padding: 16px;
-      margin: 10px 0;
-      border-radius: 10px;
-      border: 1px solid #293650;
-    }
-
-    .feature p {
-      color: #9ca3af;
-      margin-bottom: 0;
-    }
-
-    footer {
-      margin-top: 40px;
-      color: #6b7280;
-      text-align: center;
-      font-size: 12px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonRadar</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080b13;color:#f4f6ff;font-family:Arial,sans-serif}
+header{padding:24px 18px;background:#101624;border-bottom:1px solid #263047}
+h1{margin:0;color:#8b7cff;font-size:28px}
+header p{color:#9ba7bd;margin:7px 0 0}
+main{padding:18px;max-width:1100px;margin:auto}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat,.panel,.coin{background:#111827;border:1px solid #27334a;border-radius:13px;padding:15px}
+.stat small{color:#9ba7bd}
+.stat strong{display:block;font-size:22px;margin-top:8px}
+h2{font-size:19px;margin:25px 0 12px}
+.controls{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+input,select,button{background:#182236;color:white;border:1px solid #35435e;border-radius:9px;padding:11px;font-size:14px}
+input{flex:1;min-width:160px}
+button{background:#6655e8;border:0;font-weight:bold}
+button:disabled{opacity:.5}
+#status{color:#aab5c9;font-size:13px;margin:12px 0}
+.coin{margin:10px 0;display:flex;gap:12px;align-items:flex-start}
+.coin img{width:42px;height:42px;border-radius:50%;background:#263047;object-fit:cover}
+.coin-info{flex:1;min-width:0}
+.coin-title{font-weight:bold;overflow-wrap:anywhere}
+.muted{color:#9ba7bd;font-size:12px;margin-top:5px}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:12px}
+.metric{background:#0b1220;padding:9px;border-radius:8px;font-size:12px;color:#aab5c9}
+.metric b{display:block;color:#f4f6ff;margin-top:4px;font-size:14px}
+.green{color:#46d99a!important}
+.red{color:#ff7185!important}
+a{color:#a99cff;text-decoration:none}
+footer{color:#6f7b91;font-size:12px;text-align:center;padding:25px}
+@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}.metrics{grid-template-columns:repeat(4,1fr)}}
+</style>
 </head>
-
 <body>
+<header>
+<h1>🌙 MoonRadar</h1>
+<p>Your meme coin tracking command center.</p>
+</header>
+<main>
+<div class="stats">
+<div class="stat"><small>NETWORK</small><strong>Solana</strong></div>
+<div class="stat"><small>COINS FOUND</small><strong id="count">0</strong></div>
+<div class="stat"><small>WATCHLIST</small><strong id="watchCount">0</strong></div>
+<div class="stat"><small>DATA STATUS</small><strong id="health">Waiting</strong></div>
+</div>
 
-  <header>
-    <h1>🌙 MoonRadar</h1>
-    <span class="status">● SYSTEM ONLINE</span>
-  </header>
+<h2>🚀 Solana Coin Scanner</h2>
+<div class="controls">
+<input id="search" placeholder="Search coin name or symbol...">
+<select id="sort">
+<option value="volume">Highest 24h volume</option>
+<option value="liquidity">Highest liquidity</option>
+<option value="newest">Recently updated</option>
+</select>
+<button id="refresh" onclick="loadCoins()">Refresh</button>
+</div>
+<div id="status">Getting ready to connect to Solana market data...</div>
+<div id="coins"></div>
+</main>
+<footer>
+MoonRadar · Market data provided by DexScreener · Not financial advice
+</footer>
 
-  <div class="welcome">
-    <h2>Welcome to MoonRadar</h2>
-    <p>Your meme coin tracking command center.</p>
-  </div>
+<script>
+let allCoins=[];
+let watched=new Set();
 
-  <div class="grid">
-    <div class="card">
-      <p>NETWORKS</p>
-      <h2>6</h2>
+const money=n=>{
+ if(n===undefined||n===null||!Number.isFinite(Number(n)))return "N/A";
+ n=Number(n);
+ if(n>=1000000)return "$"+(n/1000000).toFixed(2)+"M";
+ if(n>=1000)return "$"+(n/1000).toFixed(1)+"K";
+ return "$"+n.toFixed(n<1?6:2);
+};
+
+async function loadCoins(){
+ const status=document.getElementById("status");
+ const refresh=document.getElementById("refresh");
+ refresh.disabled=true;
+ status.textContent="Scanning Solana tokens...";
+ document.getElementById("health").textContent="Loading";
+
+ try{
+  const response=await fetch("https://api.dexscreener.com/token-profiles/latest/v1");
+  if(!response.ok)throw new Error("Could not reach the token feed");
+  const profiles=await response.json();
+
+  const solana=profiles
+   .filter(p=>p.chainId==="solana"&&p.tokenAddress)
+   .slice(0,30);
+
+  if(!solana.length)throw new Error("No Solana tokens found right now");
+
+  const addresses=solana.map(p=>p.tokenAddress);
+  const pairResponse=await fetch(
+   "https://api.dexscreener.com/tokens/v1/solana/"+addresses.join(",")
+  );
+  if(!pairResponse.ok)throw new Error("Could not load market prices");
+  const pairs=await pairResponse.json();
+
+  const bestPairs={};
+  for(const pair of pairs){
+   const address=pair.baseToken?.address;
+   if(!address)continue;
+   const liquidity=Number(pair.liquidity?.usd||0);
+   if(!bestPairs[address]||liquidity>Number(bestPairs[address].liquidity?.usd||0)){
+    bestPairs[address]=pair;
+   }
+  }
+
+  allCoins=solana.map(profile=>{
+   const pair=bestPairs[profile.tokenAddress];
+   if(!pair)return null;
+   return {...profile,pair};
+  }).filter(Boolean);
+
+  document.getElementById("health").textContent="Connected";
+  document.getElementById("count").textContent=allCoins.length;
+  status.textContent="Updated "+new Date().toLocaleTimeString()+" · Showing available Solana token profiles.";
+  renderCoins();
+ }catch(error){
+  document.getElementById("health").textContent="Error";
+  status.textContent="Couldn't load data: "+error.message+". Try refreshing.";
+ }finally{
+  refresh.disabled=false;
+ }
+}
+
+function renderCoins(){
+ const search=document.getElementById("search").value.toLowerCase();
+ const sort=document.getElementById("sort").value;
+ let list=allCoins.filter(c=>{
+  const p=c.pair;
+  return (p.baseToken?.name||"").toLowerCase().includes(search)||
+   (p.baseToken?.symbol||"").toLowerCase().includes(search);
+ });
+
+ list.sort((a,b)=>{
+  const x=a.pair,y=b.pair;
+  if(sort==="liquidity")return Number(y.liquidity?.usd||0)-Number(x.liquidity?.usd||0);
+  if(sort==="newest")return 0;
+  return Number(y.volume?.h24||0)-Number(x.volume?.h24||0);
+ });
+
+ const container=document.getElementById("coins");
+ if(!list.length){
+  container.innerHTML='<div class="panel">No matching coins found.</div>';
+  return;
+ }
+
+ container.innerHTML=list.map(c=>{
+  const p=c.pair;
+  const address=c.tokenAddress;
+  const change=Number(p.priceChange?.h24||0);
+  const tx=p.txns?.h1||{};
+  const isWatched=watched.has(address);
+  const safeAddress=address.replace(/'/g,"");
+  return `
+  <div class="coin">
+   <img src="${c.icon||""}" onerror="this.style.display='none'">
+   <div class="coin-info">
+    <div class="coin-title">${escapeHTML(p.baseToken?.name||"Unknown")} (${escapeHTML(p.baseToken?.symbol||"???")})</div>
+    <div class="muted">${escapeHTML(address.slice(0,6))}...${escapeHTML(address.slice(-5))}</div>
+    <div class="metrics">
+     <div class="metric">Price<b>${money(p.priceUsd)}</b></div>
+     <div class="metric">Market cap / FDV<b>${money(p.marketCap||p.fdv)}</b></div>
+     <div class="metric">Liquidity<b>${money(p.liquidity?.usd)}</b></div>
+     <div class="metric">24h volume<b>${money(p.volume?.h24)}</b></div>
+     <div class="metric">1h buys<b class="green">${tx.buys??"N/A"}</b></div>
+     <div class="metric">1h sells<b class="red">${tx.sells??"N/A"}</b></div>
+     <div class="metric">24h change<b class="${change>=0?"green":"red"}">${change.toFixed(2)}%</b></div>
+     <div class="metric">Pair<b><a href="${p.url}" target="_blank" rel="noopener">View chart ↗</a></b></div>
     </div>
-
-    <div class="card">
-      <p>WATCHLIST</p>
-      <h2>0</h2>
+    <div class="controls">
+     <button onclick="toggleWatch('${safeAddress}')">${isWatched?"★ Watching":"☆ Add to watchlist"}</button>
     </div>
+   </div>
+  </div>`;
+ }).join("");
+}
 
-    <div class="card">
-      <p>WHALE ALERTS</p>
-      <h2>0</h2>
-    </div>
+function toggleWatch(address){
+ if(watched.has(address))watched.delete(address);
+ else watched.add(address);
+ document.getElementById("watchCount").textContent=watched.size;
+ renderCoins();
+}
 
-    <div class="card">
-      <p>RISK CHECKS</p>
-      <h2>Ready</h2>
-    </div>
-  </div>
+function escapeHTML(value){
+ return String(value).replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
 
-  <div class="section">
-    <h2>🚀 Trading Tools</h2>
+document.getElementById("search").addEventListener("input",renderCoins);
+document.getElementById("sort").addEventListener("change",renderCoins);
 
-    <div class="feature">
-      <strong>🔎 New Coin Scanner</strong>
-      <p>Discover newly launched meme coins.</p>
-    </div>
-
-    <div class="feature">
-      <strong>📊 Buy / Sell Tracker</strong>
-      <p>Monitor buying and selling activity.</p>
-    </div>
-
-    <div class="feature">
-      <strong>🐋 Whale Tracker</strong>
-      <p>Follow large wallet transactions.</p>
-    </div>
-
-    <div class="feature">
-      <strong>🛡️ Scam Risk Checker</strong>
-      <p>Inspect token and liquidity risks.</p>
-    </div>
-
-    <div class="feature">
-      <strong>🔔 Smart Alerts</strong>
-      <p>Watch for unusual market activity.</p>
-    </div>
-  </div>
-
-  <footer>
-    MoonRadar © 2026 · Built for smarter research.
-    <br><br>
-    Market data integration coming soon.
-  </footer>
-
+loadCoins();
+setInterval(loadCoins,60000);
+</script>
 </body>
 </html>
